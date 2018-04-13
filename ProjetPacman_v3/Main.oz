@@ -22,21 +22,27 @@ define
   PosListPacman
   InitPacmanList
   InitGhostList
+  SpawnBonus
+  SpawnPoints
   %variables de generation des cases map
   CreaSpawnBonus
   CreaSpawnGhost
   CreaSpawnPacman
+  CreaPoint
   GetPosListPacmanSpawn
   GetPosListGhostSpawn
   GetPosListBonusSpawn
+  GetPosListPoints
   %variables d'initialisation de partie
   RandomTri
-  BuildPos
+  BuildRandomList
   ControlPos
   RandomPosP
   RandomPosG
   GameSetUp
-
+  GenerateBonus
+  GeneratePoints
+  RandomPlayer
   %variables de test
   BrowseList
   BrowsePortId
@@ -46,6 +52,7 @@ define
   SpawnPacmanPositions
   SpawnGhostPositions
   SpawnBonusPositions
+  PointsPosition
   %variables utilitaires
   Split
   Append
@@ -121,6 +128,10 @@ fun {CreaSpawnBonus Row Column}
   spawnB(x:Column y:Row bool:true)
 end
 
+fun {CreaPoint Row Column}
+  point(x:Column y:Row bool:true)
+end
+
 fun {GetPosListPacmanSpawn L Row Acc}
   local
     fun {Loop L Row Column Acc}
@@ -165,6 +176,22 @@ fun {GetPosListBonusSpawn L Row Acc}
   in
     case L of nil then Acc
     [] H|T then {GetPosListBonusSpawn T Row+1 {Append {Loop H Row 1 nil} Acc}}
+    end
+  end
+end
+
+fun {GetPosListPoints L Row Acc}
+  local
+    fun {Loop L Row Column Acc}
+      case L of nil then Acc
+      [] H|T then if H == 0 then {Loop T Row Column+1 {CreaPoint Row Column}|Acc}
+                  else {Loop T Row Column+1 Acc}
+                  end
+      end
+    end
+  in
+    case L of nil then Acc
+    [] H|T then {GetPosListPoints T Row+1 {Append {Loop H Row 1 nil} Acc}}
     end
   end
 end
@@ -242,94 +269,101 @@ end
         thread {Send Ghost assignSpawn(Position)} end
         thread {Send WindowPort initGhost(X)} end
         thread {Send WindowPort spawnGhost(X Position)} end
-
       end
    end
+
+   proc {SpawnBonus Bonus}
+     if Bonus.bool == false then skip
+     else
+        thread {Send WindowPort initBonus(pt(x:Bonus.x y:Bonus.y))} end
+        thread {Send WindowPort spawnBonus(pt(x:Bonus.x y:Bonus.y))} end
+     end
+   end
+
+   proc {SpawnPoints Point}
+     if Point.bool == false then skip
+     else
+        thread {Send WindowPort initPoint(pt(x:Point.x y:Point.y))} end
+        thread {Send WindowPort spawnPoint(pt(x:Point.x y:Point.y))} end
+     end
+   end
 %%%%%%%%%%%%%%%%%%%%%%%% procedure de spawn aleatoire %%%%%%%%%%%%%%%%%%%%%%%%%
-
-  %prend en entree une liste de ports et de position
-  fun {BuildPos PosList NumMax}
-    case PosList of nil then nil
-    [] H|T then possetup(position: H count: NumMax)|{BuildPos T NumMax}
-    end
-  end
-
-  fun {ControlPos L N}
-    case L of nil then nil
-    [] H|T then
-      if N == 0 then X in
-        if H.count == 1 then T
-        else X = possetup(position: H.position count: H.count-1)
-              X|T
-        end
-      else {ControlPos T N-1}
+  fun {BuildRandomList L Save Max}
+    if Max == 0 then nil
+    else
+      case L of nil then {BuildRandomList Save nil Max}
+      []H|T then H|{BuildRandomList T H|Save Max-1}
       end
     end
   end
 
-  %procedure permettant de choisir la position d'un pacman au hasard
-  proc {RandomPosP Pacmans Possetup}
+  proc {RandomPosP Pacmans Position}
     case Pacmans of nil then skip
-    [] H|T then X in
-      X = ({OS.rand} mod {Length Possetup 0}-1)+1
-      {PacmanSpawn H {Split Possetup X}.position}
-      {RandomPosP T {ControlPos Possetup X}}
+    []H|T then  {PacmanSpawn H Position.1} {RandomPosP T Position.2}
     end
   end
 
-  %procedure permettant de choisir la position d'un fantome au hasard
-  proc {RandomPosG Ghosts Possetup}
+  proc {RandomPosG Ghosts Position}
     case Ghosts of nil then skip
-    [] H|T then X in
-      X = ({OS.rand} mod {Length Possetup 0}-1)+1
-      {GhostSpawn H {Split Possetup X}.position}
-      {RandomPosG T {ControlPos Possetup X}}
+    []H|T then {GhostSpawn H Position.1} {RandomPosG T Position.2}
     end
   end
 
-  %permet de trier la liste des joueurs pour le tour par tour
-
-  fun {RandomTri L NumMax}
-    case L of H|nil then L
-    [] H|T then X in
-    X = {Split L ({OS.rand} mod NumMax-1)+1}
-    X|{RandomTri {Remove L X} NumMax-1}
+  proc {GenerateBonus Bonus}
+    case Bonus  of nil then skip
+    [] H|T then {SpawnBonus H} {GenerateBonus T}
     end
   end
+
+  proc {GeneratePoints Points}
+    case Points of nil then skip
+    [] H|T then {SpawnPoints H} {GeneratePoints T}
+    end
+  end
+
+  fun {RandomPlayer L Max}
+      if Max == 1 then [L]
+      else case L of nil then nil
+        [] H|T then X in
+          X = ({OS.rand} mod Max-1)+1
+          {Split L X}|{RandomPlayer {Remove L X} Max-1}
+        end
+      end
+  end
+
 %%%%%%%%%%%%%%%%%% procedure de clarification du code %%%%%%%%%%%%%%%%%%%%%%
 
 %clarifie le code d'initialisation des inits de listes.
-proc {GameSetUp PacmanList GhostList PosPacman PosGhost}
+proc {GameSetUp PacmanList GhostList PosPacman PosGhost Bonus Points}
+  {GeneratePoints Points}
   {RandomPosP PacmanList PosPacman}
   {RandomPosG GhostList PosGhost}
+  {GenerateBonus Bonus}
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%% corps du programme %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   %initialisaion des variables globales
   WindowPort = {GUI.portWindow}
+  {Send WindowPort buildWindow}
 
   PacmanPort = {InitPacmanList {MakePacman Input.nbPacman Input.colorPacman Input.namePacman 1} Input.pacman}
-
   GhostPort = {InitGhostList {MakeGhost Input.nbGhost Input.colorGhost Input.nameGhost Input.nbPacman+1} Input.ghost}
+
   SpawnPacmanPositions = {GetPosListPacmanSpawn Input.map 1 nil}
   SpawnGhostPositions = {GetPosListGhostSpawn Input.map 1 nil}
   SpawnBonusPositions = {GetPosListBonusSpawn Input.map 1 nil}
+  PointsPosition = {GetPosListPoints Input.map 1 nil}
 
-  {GameSetUp PacmanPort GhostPort {BuildPos SpawnPacmanPositions {Float.toInt {Int.toFloat Input.nbPacman}/{Int.toFloat {Length SpawnPacmanPositions 0}}}} {BuildPos SpawnGhostPositions {Float.toInt {Int.toFloat Input.nbGhost}/{Int.toFloat {Length SpawnGhostPositions 0}}}}}
+  {GameSetUp PacmanPort GhostPort {BuildRandomList SpawnPacmanPositions nil
+    {Length SpawnPacmanPositions 0}} {BuildRandomList SpawnGhostPositions nil
+      {Length SpawnGhostPositions 0}} SpawnBonusPositions PointsPosition}
 
+  %local X in
+  %X = {Append PacmanPort GhostPort}
+  %{BrowsePortId {RandomPlayer X {Length X 0}}}
+  %end
    % Open GameWindow
-  {Send WindowPort buildWindow}
-
-
-  %tu peux enlever cette partie ; elle sert a tester le spawn des pacmans/ghost
-  %fais gaffe le jeu mets une demi seconde pour etre operationnel
-  local X Y
-  in
-  thread {Send PacmanPort.1 spawn(X Y)} end
-  {Browser.browse X}
-  {Browser.browse Y}
-  end
 
 
 
