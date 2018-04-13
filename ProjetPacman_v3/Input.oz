@@ -17,6 +17,7 @@ export
    pacman:Pacman
    colorPacman:ColorPacman
    namePacman:NamePacman
+   nameGhost:NameGhost
    nbGhost:NbGhost
    ghost:Ghost
    colorGhost:ColorGhost
@@ -45,6 +46,7 @@ define
    ColorGhost
    ThinkMin
    ThinkMax
+   NameGhost
 in
 
 %%%% Style of game %%%%
@@ -90,6 +92,7 @@ in
    NbGhost = 1
    Ghost = [ghost000random]
    ColorGhost = [green]% black red white]
+   NameGhost = ["bisounours"]
 
 %%%% Thinking parameters (only in simultaneous) %%%%
 
