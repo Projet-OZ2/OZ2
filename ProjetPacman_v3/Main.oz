@@ -322,11 +322,12 @@ end
   end
 
   fun {RandomPlayer L Max}
-      if Max == 1 then [L]
+      if Max == 1 then L
       else case L of nil then nil
-        [] H|T then X in
+        [] H|T then X Y in
           X = ({OS.rand} mod Max-1)+1
-          {Split L X}|{RandomPlayer {Remove L X} Max-1}
+          Y = {Split L X}
+          Y|{RandomPlayer {Remove L Y} Max-1}
         end
       end
   end
@@ -359,10 +360,11 @@ end
     {Length SpawnPacmanPositions 0}} {BuildRandomList SpawnGhostPositions nil
       {Length SpawnGhostPositions 0}} SpawnBonusPositions PointsPosition}
 
-  %local X in
-  %X = {Append PacmanPort GhostPort}
-  %{BrowsePortId {RandomPlayer X {Length X 0}}}
-  %end
+  local X in
+  X = {Append PacmanPort GhostPort}
+  PlayerPort = {RandomPlayer X {Length X 0}}
+  end
+  
    % Open GameWindow
 
 
