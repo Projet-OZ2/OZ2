@@ -230,18 +230,19 @@ end
    proc {PacmanSpawn Pacman Position}
       local X in
         thread {Send Pacman getId(X)} end
+        thread {Send Pacman assignSpawn(Position)} end
         thread {Send WindowPort initPacman(X)} end
         thread {Send WindowPort spawnPacman(X Position)} end
-        thread {Send Pacman assignSpawn(Position)} end
       end
    end
 
    proc {GhostSpawn Ghost Position}
     local X in
         thread {Send Ghost getId(X)} end
+        thread {Send Ghost assignSpawn(Position)} end
         thread {Send WindowPort initGhost(X)} end
         thread {Send WindowPort spawnGhost(X Position)} end
-        thread {Send Ghost assignSpawn(Position)} end
+
       end
    end
 %%%%%%%%%%%%%%%%%%%%%%%% procedure de spawn aleatoire %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -299,8 +300,8 @@ end
 
 %clarifie le code d'initialisation des inits de listes.
 proc {GameSetUp PacmanList GhostList PosPacman PosGhost}
-  thread {RandomPosP PacmanList PosPacman}end
-  thread {RandomPosG GhostList PosGhost}end
+  {RandomPosP PacmanList PosPacman}
+  {RandomPosG GhostList PosGhost}
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%% corps du programme %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -325,7 +326,6 @@ end
   %fais gaffe le jeu mets une demi seconde pour etre operationnel
   local X Y
   in
-  {Delay 2000}
   thread {Send PacmanPort.1 spawn(X Y)} end
   {Browser.browse X}
   {Browser.browse Y}
