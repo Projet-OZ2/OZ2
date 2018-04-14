@@ -33,6 +33,7 @@ define
   GetPosListGhostSpawn
   GetPosListBonusSpawn
   GetPosListPoints
+  GetRemainingPoints
   %variables d'initialisation de partie
   RandomTri
   BuildRandomList
@@ -43,6 +44,10 @@ define
   GenerateBonus
   GeneratePoints
   RandomPlayer
+  %variables de partie
+  EndGame
+  FindWinnerID
+  GameStartTurn
   %variables de test
   BrowseList
   BrowsePortId
@@ -53,6 +58,8 @@ define
   SpawnGhostPositions
   SpawnBonusPositions
   PointsPosition
+  NumberOfDeath
+  RemainingPoints
   %variables utilitaires
   Split
   Append
@@ -206,6 +213,22 @@ fun {GetPosListPoints L Row Acc}
   end
 end
 
+  local
+  fun {GetRemainingPoints L Row Acc}
+    fun {Loop L Row Column Acc}
+      case L of nil then Acc
+      [] H|T then if H == 0 then {Loop T Row Column+1 Acc+1}
+                  else {Loop T Row Column+1 Acc}
+                  end
+      end
+    end
+  in
+    case L of nil then Acc
+    [] H|T then {GetRemainingPoints T Row+1 {Loop H Row 1 0}+Acc}
+    end
+  end
+end
+
 %%%%%%%%%%%% fonctions d'initialisation pacmans et fantomes %%%%%%%%%%%%%%%%%%%
   %cette fonction renvoie une liste de tuples Pacman()
   fun {MakePacman PacmanNumber ColorList NameList Acc}
@@ -345,14 +368,45 @@ end
       if Max == 1 then L
       else case L of nil then nil
         [] H|T then X Y in
-          X = ({OS.rand} mod Max-1)+1
+          %TODO
+          X = ({OS.rand} mod Max)+1
           Y = {Split L X}
           Y|{RandomPlayer {Remove L Y} Max-1}
         end
       end
   end
 
+%%%%%%%%%%%%%%%%% procedures de gestion du tour par tour %%%%%%%%%%%%%%%%%%%%
+
 %%%%%%%%%%%%%%%%%% procedure de clarification du code %%%%%%%%%%%%%%%%%%%%%%
+
+%TODO verif
+fun{FindWinnerID L ID ScoreMax}
+  case L  of nil then ID
+  [] H|T then X Y in
+  thread {Send H addPoint(0 X Y)} end
+    if Y == ScoreMax then A in
+      A = {OS.rand} mod 2
+      if A == 1 then {FindWinnerID T ID ScoreMax}
+      else {FindWinnerID T X Y}
+      end
+    else
+        if Y < ScoreMax then {FindWinnerID T ID ScoreMax}
+        else {FindWinnerID T X Y}
+        end
+    end
+  end
+end
+
+%TODO verif
+fun{EndGame DeadPlayer RemainingPoints}
+  if DeadPlayer == Input.nbPacman then true
+  else
+    if RemainingPoints == 0 then true
+    else false
+    end
+  end
+end
 
 %clarifie le code d'initialisation des inits de listes.
 proc {GameSetUp PacmanList GhostList PosPacman PosGhost Bonus Points}
@@ -362,29 +416,48 @@ proc {GameSetUp PacmanList GhostList PosPacman PosGhost Bonus Points}
   {GenerateBonus Bonus}
 end
 
+proc {GameStartTurn PlayersList Save GameOver}
+  if {EndGame NumberOfDeath RemainingPoints} == true then {Send WindowPort displayWinner({FindWinnerID PacmanPort pacman(id:~1 color:'red' name:'null') ~1})}
+  else skip
+  end
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%% corps du programme %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   %initialisaion des variables globales
   WindowPort = {GUI.portWindow}
-  {Send WindowPort buildWindow}
+  %{Send WindowPort buildWindow}
 
-  PacmanPort = {InitPacmanList {MakePacman Input.nbPacman Input.colorPacman Input.namePacman 1} Input.pacman}
-  GhostPort = {InitGhostList {MakeGhost Input.nbGhost Input.colorGhost Input.nameGhost Input.nbPacman+1} Input.ghost}
+  %PacmanPort = {InitPacmanList {MakePacman Input.nbPacman Input.colorPacman Input.namePacman 1} Input.pacman}
+  %GhostPort = {InitGhostList {MakeGhost Input.nbGhost Input.colorGhost Input.nameGhost Input.nbPacman+1} Input.ghost}
 
-  SpawnPacmanPositions = {GetPosListPacmanSpawn Input.map 1 nil}
-  SpawnGhostPositions = {GetPosListGhostSpawn Input.map 1 nil}
-  SpawnBonusPositions = {GetPosListBonusSpawn Input.map 1 nil}
-  PointsPosition = {GetPosListPoints Input.map 1 nil}
+  %SpawnPacmanPositions = {GetPosListPacmanSpawn Input.map 1 nil}
+  %SpawnGhostPositions = {GetPosListGhostSpawn Input.map 1 nil}
+  %SpawnBonusPositions = {GetPosListBonusSpawn Input.map 1 nil}
+  %PointsPosition = {GetPosListPoints Input.map 1 nil}
 
-  {GameSetUp PacmanPort GhostPort {BuildRandomList SpawnPacmanPositions nil
-    {Length SpawnPacmanPositions 0}} {BuildRandomList SpawnGhostPositions nil
-      {Length SpawnGhostPositions 0}} SpawnBonusPositions PointsPosition}
+
+  %{GameSetUp PacmanPort GhostPort {BuildRandomList SpawnPacmanPositions nil
+  %  {Length SpawnPacmanPositions 0}} {BuildRandomList SpawnGhostPositions nil
+  %    {Length SpawnGhostPositions 0}} SpawnBonusPositions PointsPosition}
 
   %Initialisation de l'ordre des Pacmans/Ghosts pour le tour par tour.
-  local X in
-  X = {Append PacmanPort GhostPort}
-  PlayerPort = {RandomPlayer X {Length X 0}}
-  end
+  %local X in
+  %X = {Append PacmanPort GhostPort}
+  %PlayerPort = {RandomPlayer X {Length X 0}}
+  %end
+
+  NumberOfDeath = {Cell.new 0}
+  RemainingPoints = {Cell.new {GetRemainingPoints Input.map 1 0}}
+  {Browser.browse {Cell.access NumberOfDeath}}
+  {Browser.browse {Cell.access RemainingPoints}}
+  %%%%%%%%%%% le jeu est pret a demarrer %%%%%%%%%%%%%%%%%%%%
+
+  %if Input.isTurnByTurn == true then
+  %  {GameStartTurn}
+  %else
+  %{Browser.browse 'noTurnperTurn'}
+  %end
 
 
    % Open GameWindow
