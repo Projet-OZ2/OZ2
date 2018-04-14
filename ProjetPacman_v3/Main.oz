@@ -116,6 +116,8 @@ fun {Length L Acc}
 end
 %%%%%%%%% fonctions d'initialisation des parametres du jeu %%%%%%%%%%
 
+%les 4 fonctions suivantes permettent de generer le template des 4 tuples de
+%positions
 fun{CreaSpawnPacman Row Column}
   spawnP(x:Column y:Row)
 end
@@ -132,6 +134,8 @@ fun {CreaPoint Row Column}
   point(x:Column y:Row bool:true)
 end
 
+%Cette fonction renvoie une liste de tuples pt() contenant les positions des
+%differents Pacmans sur la map
 fun {GetPosListPacmanSpawn L Row Acc}
   local
     fun {Loop L Row Column Acc}
@@ -148,6 +152,8 @@ fun {GetPosListPacmanSpawn L Row Acc}
   end
 end
 
+%Cette fonction renvoie une liste de tuples pt() contenant les positions des
+%differents ghosts sur la map
 fun {GetPosListGhostSpawn L Row Acc}
   local
     fun {Loop L Row Column Acc}
@@ -164,6 +170,8 @@ fun {GetPosListGhostSpawn L Row Acc}
   end
 end
 
+%Cette fonction renvoie une liste de tuples pt() contenant les positions des
+%differents bonus sur la map
 fun {GetPosListBonusSpawn L Row Acc}
   local
     fun {Loop L Row Column Acc}
@@ -180,6 +188,8 @@ fun {GetPosListBonusSpawn L Row Acc}
   end
 end
 
+%Cette fonction renvoie une liste de tuples pt() contenant les positions des
+%differents points "walkabled" sur la map
 fun {GetPosListPoints L Row Acc}
   local
     fun {Loop L Row Column Acc}
@@ -197,14 +207,10 @@ fun {GetPosListPoints L Row Acc}
 end
 
 %%%%%%%%%%%% fonctions d'initialisation pacmans et fantomes %%%%%%%%%%%%%%%%%%%
-
-  %return a list of pacmanID
-  %ColorList.size == NameList.size
-  %Acc == 1 at the start
-
+  %cette fonction renvoie une liste de tuples Pacman()
   fun {MakePacman PacmanNumber ColorList NameList Acc}
       if PacmanNumber == 0 then nil
-      else case ColorList of nil then nil
+      else case ColorList of nil then nil%cette fonction renvoie une liste de tuples ghost()
            [] (H|T) then
              case NameList
              of nil then nil
@@ -215,6 +221,7 @@ end
       end
    end
 
+   %cette fonction renvoie une liste de tuples ghost()
    fun {MakeGhost GhostNumber ColorList NameList Acc}
       if {Length ColorList 0} > {Length NameList 0} then
         if GhostNumber == 0 then nil
@@ -239,7 +246,6 @@ end
     end
 
    %cette fonction renvoie une liste contenant les ports des differents pacmans
-
    fun {InitPacmanList IDList Kind}
     case IDList of nil then nil
     [] H|T then {PlayerManager.playerGenerator Kind.1 H}|{InitPacmanList T Kind.2}
@@ -247,13 +253,14 @@ end
    end
 
    %cette fonction renvoie une liste contenant les ports des differents fantomes
-
    fun {InitGhostList IDList Kind}
     case IDList of nil then nil
     [] H|T then {PlayerManager.playerGenerator Kind.1 H}|{InitGhostList T Kind.2}
     end
    end
 
+   %Procedure contenant les commandes pour que la fenetre initialise et spawn
+   %un Pacman et de setup la position de depart du Pacman
    proc {PacmanSpawn Pacman Position}
       local X in
         thread {Send Pacman getId(X)} end
@@ -263,6 +270,8 @@ end
       end
    end
 
+   %Procedure contenant les commandes pour que la fenetre initialise et spawn
+   %un ghost et de setup la position de depart du ghost
    proc {GhostSpawn Ghost Position}
     local X in
         thread {Send Ghost getId(X)} end
@@ -272,6 +281,8 @@ end
       end
    end
 
+   %Procedure contenant les commandes pour que la fenetre initialise et spawn
+   %un bonus
    proc {SpawnBonus Bonus}
      if Bonus.bool == false then skip
      else
@@ -280,6 +291,8 @@ end
      end
    end
 
+   %Procedure contenant les commandes pour que la fenetre initialise et spawn
+   %un point
    proc {SpawnPoints Point}
      if Point.bool == false then skip
      else
@@ -288,6 +301,8 @@ end
      end
    end
 %%%%%%%%%%%%%%%%%%%%%%%% procedure de spawn aleatoire %%%%%%%%%%%%%%%%%%%%%%%%%
+
+  %Procedure renvoyant une liste pseudo-aleatoire
   fun {BuildRandomList L Save Max}
     if Max == 0 then nil
     else
@@ -297,30 +312,35 @@ end
     end
   end
 
+  %Procedure permettant de faire spawn une liste de Pacmans
   proc {RandomPosP Pacmans Position}
     case Pacmans of nil then skip
     []H|T then  {PacmanSpawn H Position.1} {RandomPosP T Position.2}
     end
   end
 
+  %Procedure permettant de faire spawn une liste de ghost
   proc {RandomPosG Ghosts Position}
     case Ghosts of nil then skip
     []H|T then {GhostSpawn H Position.1} {RandomPosG T Position.2}
     end
   end
 
+  %Procedure permettant de faire spawn une liste de bonus
   proc {GenerateBonus Bonus}
     case Bonus  of nil then skip
     [] H|T then {SpawnBonus H} {GenerateBonus T}
     end
   end
 
+  %Procedure permettant de faire spawn une liste de points
   proc {GeneratePoints Points}
     case Points of nil then skip
     [] H|T then {SpawnPoints H} {GeneratePoints T}
     end
   end
 
+  %Renvoie une liste de ports trier de maniere desordonnee
   fun {RandomPlayer L Max}
       if Max == 1 then L
       else case L of nil then nil
@@ -360,11 +380,13 @@ end
     {Length SpawnPacmanPositions 0}} {BuildRandomList SpawnGhostPositions nil
       {Length SpawnGhostPositions 0}} SpawnBonusPositions PointsPosition}
 
+  %Initialisation de l'ordre des Pacmans/Ghosts pour le tour par tour.
   local X in
   X = {Append PacmanPort GhostPort}
   PlayerPort = {RandomPlayer X {Length X 0}}
   end
-  
+
+
    % Open GameWindow
 
 
