@@ -69,6 +69,7 @@ define
   PacmanRespawn
   PointIsIn
   AddToRespawn
+  RemoveFromDeath
   InformGhostThanPacmanDead
   InformGhostThanPacmanMove
   %variables de test
@@ -86,7 +87,8 @@ define
   RemainingPoints
   PacmanPositions
   GhostsPositions
-  PointsPosition
+  PointsRespawn
+  BonusRespawn
   WallPosition
   HuntMode
   %variables utilitaires
@@ -526,7 +528,7 @@ end
 
 proc {GetPoint PacmanPort Position}
   local X Y Z in
-    Z = {Cell.access PointsPosition}
+    Z = {Cell.access PointsRespawn}
     if {PointIsIn Z Position} then
       skip
     else if {PointIsIn SpawnPacmanPositions Position} then
@@ -534,7 +536,7 @@ proc {GetPoint PacmanPort Position}
          else if {PointIsIn SpawnGhostPositions Position} then
                 skip
               else
-                {Cell.assign PointsPosition {UpdatePoint Z Position}}
+                {Cell.assign PointsRespawn {UpdatePoint Z Position}}
                 thread {Send PacmanPort addPoint(Input.rewardPoint X Y)} end
                 thread {Send WindowPort scoreUpdate(X Y)} end
                 thread {Send WindowPort hidePoint(Position)} end
@@ -604,6 +606,63 @@ proc {PacmanIsKill PacmanPort}
   end
 end
 
+proc {SetMode L Mode}
+  case L of nil then skip
+  []H|T then thread {Send H setMode(Mode)} end
+                    {SetMode T Mode}
+  end
+end
+
+proc {InformPacmanThanBonusHide PacmanList Position}
+  case PacmanList of nil then skip
+  [] H|T then thread {Send H bonusRemoved(Position)} end
+                     {InformPacmanThanBonusHide T Position}
+  end
+end
+
+proc {InformPacmanThanBonusSpawn PacmanList Position}
+  case PacmanList of nil then skip
+  [] H|T then thread {Send H bonusSpawn(Position)} end
+                     {InformPacmanThanBonusSpawn T Position}
+  end
+end
+
+proc {PacmanGotBonus PacmanPort Position}
+  local X in
+    {SetMode {Cell.access PlayerPort 'hunt'}}
+    thread {Send WindowPort setMode('hunt')} end
+    thread {Send WindowPort hideBonus(Position)} end
+    thread {InformPacmanThanBonusHide PacmanPort Position} end
+    {Cell.assign HuntMode hunt(bool:true time:Input.huntTime)}
+    X = {Cell.access BonusRespawn}
+    {Cell.assign BonusRespawn bonus(x:Position.x y:Position.y time:Input.RespawnTimeBonus)|X}
+  end
+end
+
+proc {RespawnBonus Bonus}
+  thread {Send WindowPort spawnBonus(pt(x:Bonus.x y:Bonus.y))}end
+  thread {InformPacmanThanBonusSpawn PacmanPort pt(x:Bonus.x y:Bonus.y)} end
+end
+
+fun {UpdateBonusTime BonusList}
+  case BonusList of nil then nil
+  [] H|T then if H.time > 0 then bonus(x:H.x y:H.y time:H.time-1)|{UpdateBonusTime T}
+              else thread {RespawnBonus Bonus} end
+                          {UpdateBonusTime T}
+              end
+  end
+end
+
+fun {UpdateHuntMode HuntMode}
+  case HuntMode of nil then nil
+  [] H|T then if HuntMode.time > 0 then hunt(bool:true time:HuntMode.time-1000)|T
+              else {setMode PlayerPort 'classic'}
+                thread {Send WindowPort setMode('classic')} end
+                    hunt(bool:false time:0)
+              end
+  end
+end
+
 %TODO
 proc {PacmanLive PacmanPort}
   local X Y in
@@ -612,13 +671,14 @@ proc {PacmanLive PacmanPort}
       {Browser.browse 'I percut ghost'}
       thread {Send WindowPort movePacman(X Y)} end
       thread {InformGhostThanPacmanMove GhostPort X Y} end
-      if HuntMode == true then {Browser.browse 'Pacman kill the ghost'}
+      if {Cell.access HuntMode}.bool == true then {Browser.browse 'Pacman kill the ghost'}
       else {Browser.browse 'Ghost kill Pacman'} {PacmanIsKill PacmanPort}
       end
     else if {ScanPosition {Cell.access BonusList} Y} == true then
           {Browser.browse 'I found bonus'}
           thread {InformGhostThanPacmanMove GhostPort X Y} end
           thread {Send WindowPort movePacman(X Y)} end
+          {PacmanGotBonus PacmanPort Y}
          else if {ScanPosition WallPosition Y} == true then
                {Browser.browse Y}
                {Browser.browse 'Its a wall'}
@@ -635,8 +695,22 @@ proc {PacmanLive PacmanPort}
   end
 end
 
+fun{RemoveFromDeath CellContent ID}
+  case CellContent of nil then nil
+  [] H|T then if H.id.id == ID.id then T
+              else H|{RemoveFromDeath T ID}
+              end
+  end
+end
+
 proc {PacmanRespawn PacmanPort DeadRemove}
-  {Browser.browse 'Pacman Respawn'}
+  local X Y Z in
+  thread {Send PacmanPort spawn(X Y)} end
+  thread {Send WindowPort spawnPacman(X Y)} end
+  thread {InformGhostThanPacmanMove GhostPort X Y} end
+  Z = {Cell.access DeadPlayer}
+  {Cell.assign DeadPlayer {RemoveFromDeath Z X}}
+  end
 end
 
 proc {PacmanTurn PacmanPort}
@@ -647,7 +721,6 @@ proc {PacmanTurn PacmanPort}
       {Browser.browse 'is live'}
       {Delay 500}
       {PacmanLive PacmanPort}
-      skip
     else
       if Dead.time > 0 then S in
         {Browser.browse 'is dead ++++'}
@@ -671,6 +744,16 @@ end
 %TODO verif
 proc {GameStartTurn PlayersList Save}
   {Browser.browse 'turnStart'}
+  local X Y in
+  X = {Cell.access BonusRespawn}
+  {Cell.assign BonusRespawn {UpdateBonusTime X}}
+  {Browser.browse 'update des bonus'}
+  {Browser.browse {Cell.access BonusRespawn}}
+  Y = {Cell.access HuntMode}
+  {Cell.assign HuntMode {UpdateHuntMode Y}}
+  {Browser.browse 'update du huntMode'}
+  {Browser.browse {Cell.access HuntMode}}
+  end
   {Delay 500}
   if {EndGame {Cell.access NumberOfDeath} RemainingPoints} == true then {Send WindowPort displayWinner({FindWinnerID PacmanPort pacman(id:~1 color:'red' name:'null') ~1})}
     else case PlayersList of nil then {GameStartTurn Save nil}
@@ -697,13 +780,15 @@ end
   PacmanPositions = {Cell.new {InitCell Input.nbPacman 0}}
   GhostsPositions = {Cell.new {InitCell Input.nbPacman+Input.nbGhost Input.nbPacman}}
 
+  BonusRespawn = {Cell.new nil}
+  PointsRespawn = {Cell.new nil}
+
   SpawnPacmanPositions = {GetPosListPacmanSpawn Input.map 1 nil}
   {Browser.browse SpawnPacmanPositions}
   SpawnGhostPositions = {GetPosListGhostSpawn Input.map 1 nil}
   {Browser.browse SpawnGhostPositions}
   SpawnBonusPositions = {GetPosListBonusSpawn Input.map 1 nil}
   {Browser.browse SpawnBonusPositions}
-  PointsPosition = {Cell.new nil}
   BonusList = {Cell.new SpawnBonusPositions}
   WallPosition = {GetWallPosition Input.map 1 nil}
 
@@ -718,13 +803,13 @@ end
     %Initialisation de l'ordre des Pacmans/Ghosts pour le tour par tour.
     local X in
       X = {Append PacmanPort GhostPort}
-      PlayerPort = {RandomPlayer X {Length X 0}}
+      PlayerPort = {Cell.new {RandomPlayer X {Length X 0}}}
     end
 
     NumberOfDeath = {Cell.new 0}
     DeadPlayer = {Cell.new nil}
     RemainingPoints = {Cell.new {GetRemainingPoints Input.map 1 0}}
-    HuntMode = {Cell.new false}
+    HuntMode = {Cell.new hunt(bool:false time:0)}
 
 
     {Browser.browse {Cell.access GhostsPositions}}
