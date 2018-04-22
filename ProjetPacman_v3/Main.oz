@@ -70,8 +70,16 @@ define
   PointIsIn
   AddToRespawn
   RemoveFromDeath
+  SetMode
+  PacmanGotBonus
+  RespawnTimeBonus
+  RespawnBonus
+  UpdateBonusTime
+  UpdateHuntMode
   InformGhostThanPacmanDead
   InformGhostThanPacmanMove
+  InformPacmanThanBonusHide
+  InformPacmanThanBonusSpawn
   %variables de test
   BrowseList
   BrowsePortId
@@ -629,7 +637,7 @@ end
 
 proc {PacmanGotBonus PacmanPort Position}
   local X in
-    {SetMode {Cell.access PlayerPort 'hunt'}}
+    {SetMode {Cell.access PlayerPort} 'hunt'}
     thread {Send WindowPort setMode('hunt')} end
     thread {Send WindowPort hideBonus(Position)} end
     thread {InformPacmanThanBonusHide PacmanPort Position} end
@@ -639,15 +647,15 @@ proc {PacmanGotBonus PacmanPort Position}
   end
 end
 
-proc {RespawnBonus Bonus}
-  thread {Send WindowPort spawnBonus(pt(x:Bonus.x y:Bonus.y))}end
-  thread {InformPacmanThanBonusSpawn PacmanPort pt(x:Bonus.x y:Bonus.y)} end
+proc {RespawnBonus B}
+  thread {Send WindowPort spawnBonus(pt(x:B.x y:B.y))} end
+  thread {InformPacmanThanBonusSpawn PacmanPort pt(x:B.x y:B.y)} end
 end
 
 fun {UpdateBonusTime BonusList}
   case BonusList of nil then nil
   [] H|T then if H.time > 0 then bonus(x:H.x y:H.y time:H.time-1)|{UpdateBonusTime T}
-              else thread {RespawnBonus Bonus} end
+              else thread {RespawnBonus H} end
                           {UpdateBonusTime T}
               end
   end
@@ -656,7 +664,7 @@ end
 fun {UpdateHuntMode HuntMode}
   case HuntMode of nil then nil
   [] H|T then if HuntMode.time > 0 then hunt(bool:true time:HuntMode.time-1000)|T
-              else {setMode PlayerPort 'classic'}
+              else {SetMode PlayerPort 'classic'}
                 thread {Send WindowPort setMode('classic')} end
                     hunt(bool:false time:0)
               end

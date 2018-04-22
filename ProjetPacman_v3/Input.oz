@@ -55,15 +55,16 @@ in
 
 %%%% Description of the map %%%%
 
-   NRow = 7
+   NRow = 8
    NColumn = 3
    Map = [[1 1 1]
 	        [1 2 1]
-	        [1 3 1]
-	        [1 0 1]
+	        [1 4 1]
+	        [1 4 1]
 	        [1 2 1]
 	        [1 4 1]
-	        [1 1 1]]
+	        [1 3 1]
+          [1 1 1]]
 
 %%%% Respawn times %%%%
 
