@@ -861,7 +861,7 @@ end
   end
   {Delay 5000}
 
-  {GameManager [PacmansPort.1]}
+  {GameManager {Cell.access PlayerPort}}
 
   %%%%%%%%%%% le jeu est pret a demarrer %%%%%%%%%%%%%%%%%%%%
 
