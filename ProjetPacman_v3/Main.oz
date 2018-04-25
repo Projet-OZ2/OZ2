@@ -697,6 +697,10 @@ fun {UpdateHuntMode HuntMode}
   end
 end
 
+fun {PacmanKillGhost PacmanPort GhostPort}
+
+end
+
 %TODO
 proc {PacmanLive PacmanPort}
   local X Y in
@@ -824,6 +828,8 @@ end
 
   BonusRespawn = {Cell.new nil}
   PointsRespawn = {Cell.new nil}
+  PacmanPortPositions = {Cell.new nil}
+  GhostPortPositions = {Cell.new nil}
 
   SpawnPacmanPositions = {GetPosListPacmanSpawn Input.map 1 nil}
   {Browser.browse SpawnPacmanPositions}
