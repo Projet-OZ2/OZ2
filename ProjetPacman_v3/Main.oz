@@ -100,6 +100,8 @@ define
   BonusRespawn
   WallPosition
   HuntMode
+  PacmanPortPositions
+  GhostPortPositions
   %variables utilitaires
   Split
   Append
@@ -695,10 +697,6 @@ fun {UpdateHuntMode HuntMode}
                     hunt(bool:false time:0)
               end
   end
-end
-
-fun {PacmanKillGhost PacmanPort GhostPort}
-
 end
 
 %TODO
