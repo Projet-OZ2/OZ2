@@ -1,0 +1,44 @@
+\documentclass[a4paper, 11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+\date
+\author{Louis Arys, Matthieu Meert}
+\title{Rapport Projet LINGI1131}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{Préambule}
+
+Avant de commencer le rapport de ce projet, nous tenions à préciser que celui-ci n'est pas entièrement fait : Pour des raisons personnelles et de travaux dans les autres cours, nous n'avons l'un comme l'autre pu travailler suffisament sur ce projet.
+
+Ainsi, seulement la partie "turnbyturn" du projet est fonctionnelle.
+
+\section{Main controller :}
+
+Celui-ci marche de la manière suivante : 
+
+Premièrement, il initialise les différentes variables qui rentreront en jeu tout le long de la partie : les \textit{Ports} des \textit{Pacmans}, des \textit{Ghosts}, les différentes \textit{Cellules} qui serviront à maintenir des listes dynamiques permettant de connaître la position des \textit{Pacmans} et \textit{Ghosts} tout le long du jeu, ainsi que le nombre de joueurs morts, les points et les bonus qui sont en attentes de réapparition.  De plus, il transforme la Map mise dans le fichier \textbf{Input} de manière de la transformer d'une matrice à un ensemble de données utile pour la création de la carte et l'initialisation des différentes variables de partie.  Une fois toutes les variables initialisées, le \textbf{Main controller} va alors créer une liste avec les \textit{Ports} des différents \textit{Pacmans} et \textit{Ghosts} et la trier pseudo-aléatoirement
+
+Deuxièmement, Une fois la première étape accomplie, le \textbf{Main controller} va lancer la fonction \texttt{GameManager} qui bouclera sur la liste des joueurs jusqu'à ce que tous les \textit{Pacmans} soient mort.  Cette fonction fonctionne en deux parties :
+
+\begin{itemize}
+\item en premier, elle va mettre à jour les temps de réapparition des points, bonus, joueurs décédés.
+\item en deuxième, elle va lancer le prochain tour de jeu durant lesquelles les joueurs effectueront les actions les uns après les autres
+\end{itemize}
+
+Comme dit ci-avant, \texttt{GameManager} lancera dans un deuxième temps la fonction \texttt{GameStartTurn}.  Celle-ci prendra chaque joueur séparément, regardera si le joueur est un ghost ou un pacman et lancera la 
+
+\section{Nos Pacmans :}
+
+\section{Nos Ghosts :}
+
+\section{Le test des Joueurs des autres groupes :}
+
+\end{document}
+
