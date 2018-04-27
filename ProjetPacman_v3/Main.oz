@@ -813,7 +813,7 @@ end
 
 fun {FindPortByID Ports ID}
   local X in
-    case Ports of nil then nil
+    case Port of nil then nil
     [] H|T then thread {Send H getId(X)} end
                 if X.id == ID.id then H
                 else {FindPortByID T ID}
@@ -1098,7 +1098,7 @@ end
     HuntMode = {Cell.new hunt(bool:false time:0)}
   end
 
-  {GameManager PacmansPort}
+  {GameManager [GhostPort.1]}
 
   %%%%%%%%%%% le jeu est pret a demarrer %%%%%%%%%%%%%%%%%%%%
 
