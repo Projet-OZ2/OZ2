@@ -868,6 +868,7 @@ proc {PacmanLive PacmanPort}
         if {Cell.access HuntMode}.bool == true then
                                                     {Cell.assign PacmanPortPositions {MovePacmanById {Cell.access PacmanPortPositions} X Y}}
                                                     {PacmanKillGhostPacmanLoop PacmanPort Z}
+                                                    {GetPoint PacmanPort Y}
         else
              {PacmanIsKillRandom PacmanPort Z ({OS.rand} mod {Length Z 0})+1}
              {Cell.assign PacmanPortPositions {MovePacmanById {Cell.access PacmanPortPositions} X pt(x:0 y:0)}}
@@ -876,6 +877,7 @@ proc {PacmanLive PacmanPort}
         if {Cell.access HuntMode}.bool == true then
                                                     {Cell.assign PacmanPortPositions {MovePacmanById {Cell.access PacmanPortPositions} X Y}}
                                                     {PacmanKillGhost PacmanPort Z.1 {FindPortByID GhostPort Z.1}}
+                                                    {GetPoint PacmanPort Y}
         else
              {PacmanIsKill PacmanPort {FindPortByID GhostPort Z.1}}
              {Cell.assign PacmanPortPositions {MovePacmanById {Cell.access PacmanPortPositions} X pt(x:0 y:0)}}
