@@ -1,4 +1,4 @@
-all: gui input playermanager pacman main
+all: gui input playermanager pacman main run
 playermanager:
 	ozc -c PlayerManager.oz
 gui:
@@ -8,12 +8,11 @@ input:
 main:
 	ozc -c Main.oz
 pacman:
-	ozc -c Pacman001rene.oz
-	ozc -c Pacman002fred.oz
+	ozc -c Pacman103fred.oz
 ghost:
-	ozc -c Ghost001rene.oz
+	ozc -c Ghost103vincent.oz
 run:
-	@echo "launch game"
+	@echo "Game launched"
 	ozengine Main.ozf
 clean:
 	rm *.ozf
