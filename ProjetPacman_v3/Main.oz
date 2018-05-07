@@ -534,11 +534,16 @@ end
 %%%%%%%%%%%%%%%% procedures generales du jeu %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fun {MovePacmanById List ID Position}
-  case List of nil then nil
-  [] H|T then if H.id.id == ID.id then pacpos(id:ID x:Position.x y:Position.y)|T
-              else H|{MovePacmanById T ID Position}
-              end
-  end
+if ID == null then List
+else if Position == null then List
+    else
+      case List of nil then nil
+      [] H|T then if H.id.id == ID.id then pacpos(id:ID x:Position.x y:Position.y)|T
+                  else H|{MovePacmanById T ID Position}
+                  end
+      end
+    end
+end
 end
 
 fun {MoveGhostById List ID Position}
@@ -612,16 +617,23 @@ proc{GetBonus PacmanPort Position List ?Bound}
 end
 
 fun {UpdatePoint Cellcontent Position}
+  if Position == null then Cellcontent
+  else
   {CreaPoint Position.y Position.x}|Cellcontent
+  end
 end
 
 fun {PointIsIn L Position}
-  case L of nil then false
-  [] H|T then if H.x == Position.x andthen H.y == Position.y then true
+if Position == null then
+  false
+else
+    case L of nil then false
+    [] H|T then if H.x == Position.x andthen H.y == Position.y then true
               else
                 {PointIsIn T Position}
               end
-  end
+    end
+end
 end
 
 proc {GetPoint PacmanPort Position}
@@ -664,8 +676,11 @@ end
 
 fun {ScanPosition List Position}
   case List of nil then false
-  [] H|T then if H.x == Position.x andthen H.y == Position.y then true
-              else {ScanPosition T Position}
+  [] H|T then if Position == null then false
+              else
+                if H.x == Position.x andthen H.y == Position.y then true
+                          else {ScanPosition T Position}
+                          end
               end
   end
 end
@@ -827,11 +842,14 @@ proc {PacmanKillGhost PacmanPort GhostID GhostPort}
 end
 
 fun{RemoveFromDeath CellContent ID}
+if ID == null then CellContent
+else
   case CellContent of nil then nil
   [] H|T then if H.id.id == ID.id then T
               else H|{RemoveFromDeath T ID}
               end
   end
+end
 end
 
 proc {PacmanRespawn PacmanPort DeadRemove}
@@ -860,6 +878,7 @@ end
 proc {PacmanLive PacmanPort}
   local X Y in
     {Send PacmanPort move(X Y)}
+    {Browser.browse 'scanghost'}
     if {ScanPosition {Cell.access GhostPortPositions} Y} == true then Z in
       Z = {FindIdByPosition {Cell.access GhostPortPositions} Y}
       thread {Send WindowPort movePacman(X Y)} end
@@ -883,12 +902,12 @@ proc {PacmanLive PacmanPort}
              {Cell.assign PacmanPortPositions {MovePacmanById {Cell.access PacmanPortPositions} X pt(x:0 y:0)}}
         end
       end
-    else if {ScanPosition {Cell.access BonusList} Y} == true then
+    else {Browser.browse 'scanbonus'} if {ScanPosition {Cell.access BonusList} Y} == true then
           thread {InformGhostThanPacmanMove GhostPort X Y} end
           thread {Send WindowPort movePacman(X Y)} end
           {PacmanGotBonus Y}
           {Cell.assign PacmanPortPositions {MovePacmanById {Cell.access PacmanPortPositions} X Y}}
-         else if {ScanPosition WallPosition Y} == true then
+         else {Browser.browse 'scanwall'} if {ScanPosition WallPosition Y} == true then
                {Browser.browse Y}
                {Browser.browse 'Its a wall'}
               else
@@ -991,6 +1010,7 @@ end
 
 %TODO verif
 proc {GameStartTurn PlayersList}
+  {Delay 100}
   if {EndGame {Cell.access NumberOfDeath} RemainingPoints} == true then {Send WindowPort displayWinner({FindWinnerID PacmansPort pacman(id:~1 color:'red' name:'null') ~100000000})}
     else case PlayersList of nil then skip
     [] H|T then X in
@@ -1055,6 +1075,10 @@ end
     RemainingPoints = {Cell.new {GetRemainingPoints Input.map 1 0}}
     HuntMode = {Cell.new hunt(bool:false time:0)}
   end
+
+  {Delay 15000}
+  {Browser.browse {Cell.access PlayerPort}}
+  {Delay 10000}
 
   {GameManager {Cell.access PlayerPort}}
 
