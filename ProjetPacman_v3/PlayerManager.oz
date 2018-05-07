@@ -2,8 +2,14 @@ functor
 import
    Pacman000random
    Pacman001rene
+   Pacman037Hungry
+   Pacman037Randy
+   Pacman094basic
    Pacman103fred
    Ghost000random
+   Ghost037Angry
+   Ghost037Randy
+   Ghost094basic
    Ghost103vincent
 export
    playerGenerator:PlayerGenerator
