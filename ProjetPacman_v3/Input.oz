@@ -89,14 +89,14 @@ in
 
 %%%% Players description %%%%
 
-   NbPacman = 2
-   Pacman = [pacman037Hungry pacman037Hungry]
-   ColorPacman = [yellow red]
-   NamePacman = ['louis' 'matthieu']
-   NbGhost = 2
-   Ghost = [ghost037Angry ghost037Randy]
-   ColorGhost = [green]% black red white]
-   NameGhost = ["bisounours"]
+   NbPacman = 4
+   Pacman = [pacman037Hungry pacman037Randy pacman094basic pacman103fred]
+   ColorPacman = [yellow red yellow red]
+   NamePacman = ['louis' 'matthieu' 'jeanmich' 'jerome']
+   NbGhost = 4
+   Ghost = [ghost037Angry ghost037Randy ghost094basic ghost103vincent]
+   ColorGhost = [green red black white]% black red white]
+   NameGhost = ["bisounours" "bisoutwo" "bisouthree" "bisoufour"]
 
 %%%% Thinking parameters (only in simultaneous) %%%%
 

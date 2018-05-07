@@ -1076,10 +1076,6 @@ end
     HuntMode = {Cell.new hunt(bool:false time:0)}
   end
 
-  {Delay 15000}
-  {Browser.browse {Cell.access PlayerPort}}
-  {Delay 10000}
-
   {GameManager {Cell.access PlayerPort}}
 
   %%%%%%%%%%% le jeu est pret a demarrer %%%%%%%%%%%%%%%%%%%%
